@@ -1,4 +1,4 @@
-package io.ssttkkl.algorithms.datastructure.queue
+package io.ssttkkl.algorithms.queue
 
 import io.ssttkkl.algorithms.utils.swap
 

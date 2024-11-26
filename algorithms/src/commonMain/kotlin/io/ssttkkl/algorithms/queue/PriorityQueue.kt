@@ -1,4 +1,4 @@
-package io.ssttkkl.algorithms.datastructure.queue
+package io.ssttkkl.algorithms.queue
 
 interface PriorityQueue<E> {
     val size: Int
