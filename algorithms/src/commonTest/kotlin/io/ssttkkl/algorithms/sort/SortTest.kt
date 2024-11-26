@@ -21,3 +21,4 @@ abstract class SortTest(val sortImpl: Sort) {
 class InsertSortTest : SortTest(InsertSort)
 class SelectSortTest : SortTest(SelectSort)
 class ShellSortTest : SortTest(ShellSort())
+class MergeSortTest : SortTest(MergeSort)
