@@ -1,4 +1,4 @@
-package io.ssttkkl.algorithms.sort
+package io.ssttkkl.algorithms.utils
 
 import java.lang.IllegalArgumentException
 

@@ -1,5 +1,7 @@
 package io.ssttkkl.algorithms.sort
 
+import io.ssttkkl.algorithms.utils.swap
+
 object SelectSort : Sort {
     override fun <V> sort(list: MutableList<V>, comparator: Comparator<V>) {
         for (i in 0 until list.size) {

@@ -1,6 +1,6 @@
 package io.ssttkkl.algorithms.sort
 
-import java.lang.IllegalArgumentException
+import io.ssttkkl.algorithms.utils.copyFrom
 
 object MergeSort : Sort {
     override fun <V> sort(list: MutableList<V>, comparator: Comparator<V>) {
