@@ -2,8 +2,20 @@ package io.ssttkkl.algorithms.queue
 
 import io.ssttkkl.algorithms.utils.swap
 
-class HeapPriorityQueue<E>(private val comparator: Comparator<E>) : PriorityQueue<E> {
-    private val heap = ArrayList<E>()
+class HeapPriorityQueue<E> private constructor(
+    private val comparator: Comparator<E>,
+    private val heap: MutableList<E>
+) : PriorityQueue<E> {
+    constructor(comparator: Comparator<E>) : this(comparator, arrayListOf())
+    constructor(comparator: Comparator<E>, elements: Collection<E>) : this(comparator, ArrayList(elements))
+
+    init {
+        var i = heap.size / 2
+        while (i >= 0) {
+            sink(i)
+            i--
+        }
+    }
 
     private fun parentIndex(nodeIndex: Int): Int {
         return (nodeIndex + 1) / 2 - 1
@@ -20,12 +32,8 @@ class HeapPriorityQueue<E>(private val comparator: Comparator<E>) : PriorityQueu
         return heap.first()
     }
 
-    override fun pop(): E {
-        val element = heap.first()
-        heap.swap(0, heap.size - 1)
-        heap.removeLast()
-
-        var p = 0
+    private fun sink(index: Int) {
+        var p = index
         while (true) {
             val child = childIndex(p)
             if (child >= heap.size) break
@@ -44,14 +52,10 @@ class HeapPriorityQueue<E>(private val comparator: Comparator<E>) : PriorityQueu
                 break
             }
         }
-
-        return element
     }
 
-    override fun push(element: E) {
-        heap.addLast(element)
-
-        var p = heap.size - 1
+    private fun swim(index: Int) {
+        var p = index
         while (p != 0) {
             val parent = parentIndex(p)
             if (comparator.compare(heap[p], heap[parent]) < 0) {
@@ -63,4 +67,15 @@ class HeapPriorityQueue<E>(private val comparator: Comparator<E>) : PriorityQueu
         }
     }
 
+    override fun pop(): E {
+        heap.swap(0, heap.size - 1)
+        val element = heap.removeLast()
+        sink(0)
+        return element
+    }
+
+    override fun push(element: E) {
+        heap.add(element)
+        swim(heap.size - 1)
+    }
 }

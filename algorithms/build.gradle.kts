@@ -16,26 +16,26 @@ kotlin {
             }
         }
     }
-//    js(IR) {
-//        browser()
-//        nodejs()
-//    }
-//    @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
-//    wasmJs {
-//        browser()
-//        nodejs()
-//    }
-//    wasmWasi {
-//        nodejs()
-//    }
-//    iosArm64()
-//    iosX64()
-//    iosSimulatorArm64()
-//    macosArm64()
-//    macosX64()
-//    linuxArm64()
-//    linuxX64()
-//    mingwX64()
+    js(IR) {
+        browser()
+        nodejs()
+    }
+    @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
+    wasmJs {
+        browser()
+        nodejs()
+    }
+    wasmWasi {
+        nodejs()
+    }
+    iosArm64()
+    iosX64()
+    iosSimulatorArm64()
+    macosArm64()
+    macosX64()
+    linuxArm64()
+    linuxX64()
+    mingwX64()
 
     sourceSets {
         val commonMain by getting {
