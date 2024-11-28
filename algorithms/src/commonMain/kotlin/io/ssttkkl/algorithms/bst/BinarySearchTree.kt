@@ -1,11 +1,9 @@
 package io.ssttkkl.algorithms.bst
 
-import kotlin.random.Random
-
 open class BinarySearchTree<K, V>(
     val comparator: Comparator<K>
 ) : AbstractMutableMap<K, V>() {
-    class Entry<K, V>(
+    open class Entry<K, V>(
         override var key: K,
     ) : MutableMap.MutableEntry<K, V> {
         internal var _value: V? = null
@@ -18,17 +16,31 @@ open class BinarySearchTree<K, V>(
 
         internal var parent: Entry<K, V>? = null
 
+        internal var size: Int = 1
+
         override fun setValue(newValue: V): V {
             return value.also { _value = newValue }
         }
 
-        internal fun minimal(): Entry<K,V> {
+        internal inline fun forEachAncestor(action: (Entry<K, V>) -> Unit) {
+            var cur: Entry<K, V>? = this.parent
+            while (cur != null) {
+                action(cur)
+                cur = cur.parent
+            }
+        }
+
+        internal fun updateSize() {
+            size = (left?.size ?: 0) + (right?.size ?: 0) + 1
+        }
+
+        internal fun minimal(): Entry<K, V> {
             var cur = this
             while (cur.left != null) cur = cur.left!!
             return cur
         }
 
-        internal fun maximum(): Entry<K,V> {
+        internal fun maximum(): Entry<K, V> {
             var cur = this
             while (cur.right != null) cur = cur.right!!
             return cur
@@ -63,10 +75,10 @@ open class BinarySearchTree<K, V>(
         }
     }
 
-    protected var root: Entry<K, V>? = null
+    private val Entry<*,*>?.size: Int
+        get() = this?.size ?: 0
 
-    final override var size: Int = 0
-        private set
+    protected var root: Entry<K, V>? = null
 
     protected fun searchNode(key: K, insert: Boolean = false): Entry<K, V>? {
         var cur: Entry<K, V>? = root
@@ -89,91 +101,77 @@ open class BinarySearchTree<K, V>(
             }
         }
         if (insert) {
-            cur = Entry(key)
-            cur.parent = parent
-            if (cmp < 0) {
-                parent!!.left = cur
-            } else {
-                parent!!.right = cur
+            cur = Entry<K, V>(key).also { newNode ->
+                newNode.parent = parent
+                if (cmp < 0) {
+                    parent!!.left = newNode
+                } else {
+                    parent!!.right = newNode
+                }
+                newNode.forEachAncestor { it.size++ }
             }
-            size++
         }
         return cur
     }
 
-    protected fun removeNode(node: Entry<K, V>) {
-        val parent = node.parent
-        val hasLeftChild = node.left != null
-        val hasRightChild = node.right != null
-        if (!hasLeftChild && !hasRightChild) {
-            if (parent != null) {
-                val isLeftChild = parent.left == node
-                if (isLeftChild) {
-                    parent.left = null
-                } else {
-                    parent.right = null
-                }
-            } else {
-                root = null
-            }
-        } else if (hasLeftChild xor hasRightChild) {
-            val child = if (hasLeftChild) node.left else node.right
-            if (parent != null) {
-                val isLeftChild = parent.left == node
-                if (isLeftChild) {
-                    parent.left = child
-                } else {
-                    parent.right = child
-                }
-            } else {
-                root = child
-            }
-            child!!.parent = null
-        } else {
-            val left = node.left!!
-            val right = node.right!!
-            val replacer: Entry<K, V>
-            if (Random.nextBoolean()) {
-                val leftMaximum = left.maximum()
-                if (leftMaximum != left) {
-                    leftMaximum.parent!!.right = leftMaximum.left
-                    leftMaximum.left?.parent = leftMaximum.parent
-                } else {
-                    node.left = left.left
-                    node.left?.parent = node
-                }
-                replacer = leftMaximum
-            } else {
-                val rightMinimal = right.minimal()
-                if (rightMinimal != right) {
-                    rightMinimal.parent!!.left = rightMinimal.right
-                    rightMinimal.right?.parent = rightMinimal.parent
-                } else {
-                    node.right = right.right
-                    node.right?.parent = node
-                }
-                replacer = rightMinimal
+    protected fun removeNode(key: K, root: Entry<K, V>? = this.root): Pair<Entry<K, V>?, Entry<K, V>?> {
+        if (root == null) return Pair(null, null)
+
+        val cmp: Int = comparator.compare(key, root.key)
+        when {
+            cmp < 0 -> {
+                val (node, newLeft) = removeNode(key, root.left)
+                root.left = newLeft
+                newLeft?.parent = root
+                root.updateSize()
+                return Pair(node, root)
             }
 
-            replacer.parent = parent
-            if (parent != null) {
-                if (parent.left == node)
-                    parent.left = replacer
-                else
-                    parent.right = replacer
-            } else {
-                root = replacer
+            cmp > 0 -> {
+                val (node, newRight) = removeNode(key, root.right)
+                root.right = newRight
+                newRight?.parent = root
+                root.updateSize()
+                return Pair(node, root)
             }
 
-            replacer.left = node.left
-            replacer.left?.parent = replacer
-            replacer.right = node.right
-            replacer.right?.parent = replacer
+            root.left == null -> {
+                root.right?.parent = null
+                return Pair(root, root.right)
+            }
+
+            root.right == null -> {
+                root.left?.parent = null
+                return Pair(root, root.left)
+            }
+
+            root.left.size > root.right.size -> {
+                val replacement = root.left!!.maximum()
+                val (_, newLeft) = removeNode(replacement.key, root.left)
+                replacement.left = newLeft
+                newLeft?.parent = replacement
+                replacement.right = root.right
+                root.right?.parent = replacement
+                replacement.updateSize()
+                replacement.parent = null
+                return Pair(root, replacement)
+            }
+
+            else -> {
+                val replacement = root.right!!.minimal()
+                val (_, newRight) = removeNode(replacement.key, root.right)
+                replacement.left = root.left
+                root.left?.parent = replacement
+                replacement.right = newRight
+                newRight?.parent = replacement
+                replacement.updateSize()
+                replacement.parent = null
+                return Pair(root, replacement)
+            }
         }
-        size--
     }
 
-    protected inner class EntryIterator<out T>(val getValue: (Entry<K, V>)->T) : MutableIterator<T> {
+    protected inner class EntryIterator<out T>(val getValue: (Entry<K, V>) -> T) : MutableIterator<T> {
         private var next: Entry<K, V>? = root?.minimal()
 
         override fun hasNext(): Boolean {
@@ -195,31 +193,36 @@ open class BinarySearchTree<K, V>(
             val result = next
             checkNotNull(result) { "there's no next entry" }
             next = result.successor()
-            removeNode(result)
+            val (node, newRoot) = removeNode(result.key)
+            check(node == result)
+            root = newRoot
         }
     }
 
-    override val entries: MutableSet<MutableMap.MutableEntry<K, V>> = object : AbstractMutableSet<MutableMap.MutableEntry<K, V>>() {
-        override val size: Int
-            get() = this@BinarySearchTree.size
+    override val size: Int
+        get() = root.size
 
-        override fun iterator(): MutableIterator<MutableMap.MutableEntry<K, V>> {
-            return EntryIterator { it }
-        }
+    override val entries: MutableSet<MutableMap.MutableEntry<K, V>> =
+        object : AbstractMutableSet<MutableMap.MutableEntry<K, V>>() {
+            override val size: Int
+                get() = this@BinarySearchTree.size
 
-        override fun add(element: MutableMap.MutableEntry<K, V>): Boolean {
-            throw UnsupportedOperationException()
-        }
-
-        override fun remove(element: MutableMap.MutableEntry<K, V>): Boolean {
-            val node = searchNode(element.key)
-            if (node != null) {
-                this@BinarySearchTree.removeNode(node)
-                return true
+            override fun iterator(): MutableIterator<MutableMap.MutableEntry<K, V>> {
+                return EntryIterator { it }
             }
-            return false
+
+            override fun add(element: MutableMap.MutableEntry<K, V>): Boolean {
+                throw UnsupportedOperationException()
+            }
+
+            override fun remove(element: MutableMap.MutableEntry<K, V>): Boolean {
+                val (node, newRoot) = removeNode(element.key)
+                if (node != null) {
+                    root = newRoot
+                }
+                return node != null
+            }
         }
-    }
 
     override val keys: MutableSet<K> = object : AbstractMutableSet<K>() {
         override val size: Int
@@ -234,12 +237,11 @@ open class BinarySearchTree<K, V>(
         }
 
         override fun remove(element: K): Boolean {
-            val node = searchNode(element)
+            val (node, newRoot) = removeNode(element)
             if (node != null) {
-                this@BinarySearchTree.removeNode(node)
-                return true
+                root = newRoot
             }
-            return false
+            return node != null
         }
     }
 
@@ -248,12 +250,11 @@ open class BinarySearchTree<K, V>(
     }
 
     override fun remove(key: K): V? {
-        val node = searchNode(key)
+        val (node, newRoot) = removeNode(key)
         if (node != null) {
-            removeNode(node)
-            return node.value
+            root = newRoot
         }
-        return null
+        return node?.value
     }
 
     override fun put(key: K, value: V): V? {
@@ -262,7 +263,6 @@ open class BinarySearchTree<K, V>(
             root = Entry<K, V>(key).apply {
                 _value = value
             }
-            size++
         } else {
             searchNode(key, true)!!.apply {
                 oldValue = _value
@@ -282,11 +282,11 @@ open class BinarySearchTree<K, V>(
 
     fun toGraphviz(): String {
         return buildString {
-            fun Entry<K,V>.dfs() {
-                if (left!=null){
+            fun Entry<K, V>.dfs() {
+                if (left != null) {
                     appendLine("${key} -> ${left!!.key} [label = \"L\"];")
                 }
-                if (right!=null){
+                if (right != null) {
                     appendLine("${key} -> ${right!!.key} [label = \"R\"];")
                 }
                 left?.dfs()
