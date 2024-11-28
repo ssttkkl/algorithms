@@ -1,8 +1,8 @@
 package io.ssttkkl.algorithms.bst
 
 open class BinarySearchTree<K, V>(
-    val comparator: Comparator<K>
-) : AbstractMutableMap<K, V>() {
+    private val comparator: Comparator<K>
+) : AbstractMutableMap<K, V>(), MutableSortedMap<K, V> {
     open class Entry<K, V>(
         override var key: K,
     ) : MutableMap.MutableEntry<K, V> {
@@ -75,7 +75,7 @@ open class BinarySearchTree<K, V>(
         }
     }
 
-    private val Entry<*,*>?.size: Int
+    private val Entry<*, *>?.size: Int
         get() = this?.size ?: 0
 
     protected var root: Entry<K, V>? = null
@@ -171,7 +171,7 @@ open class BinarySearchTree<K, V>(
         }
     }
 
-    protected inner class EntryIterator<out T>(val getValue: (Entry<K, V>) -> T) : MutableIterator<T> {
+    protected inner class EntryIterator<out T>(val getValue: (Entry<K, V>) -> T) : MutableBidirectionIterator<T> {
         private var next: Entry<K, V>? = root?.minimal()
 
         override fun hasNext(): Boolean {
@@ -179,8 +179,7 @@ open class BinarySearchTree<K, V>(
         }
 
         fun nextEntry(): Entry<K, V> {
-            val result = next
-            checkNotNull(result) { "there's no next entry" }
+            val result = next ?: throw NoSuchElementException()
             next = result.successor()
             return result
         }
@@ -190,24 +189,45 @@ open class BinarySearchTree<K, V>(
         }
 
         override fun remove() {
-            val result = next
-            checkNotNull(result) { "there's no next entry" }
+            val result = next ?: throw NoSuchElementException()
             next = result.successor()
             val (node, newRoot) = removeNode(result.key)
             check(node == result)
             root = newRoot
+        }
+
+        override fun hasPrevious(): Boolean {
+            return next?.predecessor() != null
+        }
+
+        fun previousEntry(): Entry<K, V> {
+            val result = next ?: throw NoSuchElementException()
+            next = result.predecessor()
+            return result
+        }
+
+        override fun previous(): T {
+            return previousEntry().let(getValue)
         }
     }
 
     override val size: Int
         get() = root.size
 
-    override val entries: MutableSet<MutableMap.MutableEntry<K, V>> =
-        object : AbstractMutableSet<MutableMap.MutableEntry<K, V>>() {
+    override val entries: MutableSortedSet<MutableMap.MutableEntry<K, V>> =
+        object : AbstractMutableSet<MutableMap.MutableEntry<K, V>>(), MutableSortedSet<MutableMap.MutableEntry<K, V>> {
             override val size: Int
                 get() = this@BinarySearchTree.size
 
-            override fun iterator(): MutableIterator<MutableMap.MutableEntry<K, V>> {
+            override fun first(): MutableMap.MutableEntry<K, V> {
+                return this@BinarySearchTree.firstEntry()
+            }
+
+            override fun last(): MutableMap.MutableEntry<K, V> {
+                return this@BinarySearchTree.lastEntry()
+            }
+
+            override fun iterator(): MutableBidirectionIterator<MutableMap.MutableEntry<K, V>> {
                 return EntryIterator { it }
             }
 
@@ -224,11 +244,97 @@ open class BinarySearchTree<K, V>(
             }
         }
 
-    override val keys: MutableSet<K> = object : AbstractMutableSet<K>() {
+    override fun lowerEntry(key: K): Entry<K, V>? {
+        val floor = floorEntry(key) ?: return null
+        if (floor.key == key) {
+            return floor.predecessor()
+        }
+        return floor
+    }
+
+    override fun floorEntry(key: K): Entry<K, V>? {
+        TODO("Not yet implemented")
+    }
+
+    override fun ceilingEntry(key: K): Entry<K, V>? {
+        TODO("Not yet implemented")
+    }
+
+    override fun higherEntry(key: K): Entry<K, V>? {
+        val ceiling = ceilingEntry(key) ?: return null
+        if (ceiling.key == key) {
+            return ceiling.successor()
+        }
+        return ceiling
+    }
+
+    override fun entryOfRank(rank: Int): Entry<K, V>? {
+        var cur = root
+        var r = rank + 1
+        while (r in 1..cur.size && cur != null) {
+            when {
+                r <= cur.left.size -> {
+                    cur = cur.left
+                }
+
+                r == cur.left.size + 1 -> {
+                    return cur
+                }
+
+                r <= cur.size -> {
+                    r -= cur.left.size + 1
+                    cur = cur.right
+                }
+            }
+        }
+        return null
+    }
+
+    override fun rankOfKey(key: K): Int {
+        var cur: Entry<K, V>? = root
+        var r = 1
+        while (cur != null) {
+            val cmp = comparator.compare(key, cur.key)
+            when {
+                cmp < 0 -> {
+                    cur = cur.left
+                }
+
+                cmp == 0 -> {
+                    r += cur.left.size
+                    return r - 1
+                }
+
+                else -> {
+                    r += cur.left.size + 1
+                    cur = cur.right
+                }
+            }
+        }
+        return r - 1
+    }
+
+    override fun firstEntry(): Entry<K, V> {
+        return root?.minimal() ?: throw NoSuchElementException()
+    }
+
+    override fun lastEntry(): Entry<K, V> {
+        return root?.maximum() ?: throw NoSuchElementException()
+    }
+
+    override val keys: MutableSortedSet<K> = object : AbstractMutableSet<K>(), MutableSortedSet<K> {
         override val size: Int
             get() = this@BinarySearchTree.size
 
-        override fun iterator(): MutableIterator<K> {
+        override fun first(): K {
+            return this@BinarySearchTree.firstKey()
+        }
+
+        override fun last(): K {
+            return this@BinarySearchTree.lastKey()
+        }
+
+        override fun iterator(): MutableBidirectionIterator<K> {
             return EntryIterator { it.key }
         }
 

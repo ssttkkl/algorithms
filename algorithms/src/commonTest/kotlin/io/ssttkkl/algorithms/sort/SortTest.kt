@@ -2,6 +2,7 @@ package io.ssttkkl.algorithms.sort
 
 import kotlin.random.Random
 import kotlin.test.Test
+import kotlin.test.assertTrue
 
 abstract class SortTest(val sortImpl: Sort) {
     @Test
@@ -12,7 +13,7 @@ abstract class SortTest(val sortImpl: Sort) {
             sortImpl.sort(list)
 
             for (i in 1 until size) {
-                assert(list[i] >= list[i - 1])
+                assertTrue(list[i] >= list[i - 1])
             }
         }
     }

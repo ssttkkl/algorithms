@@ -1,7 +1,7 @@
 package io.ssttkkl.algorithms.math
 
-import org.junit.jupiter.api.Assertions.assertEquals
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFails
 
 class GCDTest {
