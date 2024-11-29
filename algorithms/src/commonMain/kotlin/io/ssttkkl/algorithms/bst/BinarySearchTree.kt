@@ -10,13 +10,17 @@ open class BinarySearchTree<K, V>(
         override val value: V
             get() = _value!!
 
-        internal var left: Entry<K, V>? = null
+        var left: Entry<K, V>? = null
+            internal set
 
-        internal var right: Entry<K, V>? = null
+         var right: Entry<K, V>? = null
+            internal set
 
-        internal var parent: Entry<K, V>? = null
+         var parent: Entry<K, V>? = null
+            internal set
 
-        internal var size: Int = 1
+        var size: Int = 1
+            internal set
 
         override fun toString(): String {
             return "${key}=${value}"
@@ -36,31 +40,53 @@ open class BinarySearchTree<K, V>(
             return value.also { _value = newValue }
         }
 
-        internal inline fun forEachAncestor(action: (Entry<K, V>) -> Unit) {
-            var cur: Entry<K, V>? = this.parent
-            while (cur != null) {
-                action(cur)
-                cur = cur.parent
-            }
+        internal fun rotateLeft(): Entry<K, V> {
+            val newRoot = right
+            checkNotNull(newRoot)
+
+            val p = newRoot.left
+            newRoot.left = this
+            this.parent = newRoot
+            this.right = p
+            p?.parent = this
+
+            this.updateSize()
+            newRoot.updateSize()
+            return newRoot
+        }
+
+        internal fun rotateRight(): Entry<K, V> {
+            val newRoot = left
+            checkNotNull(newRoot)
+
+            val p = newRoot.right
+            newRoot.right = this
+            this.parent = newRoot
+            this.left = p
+            p?.parent = this
+
+            this.updateSize()
+            newRoot.updateSize()
+            return newRoot
         }
 
         internal fun updateSize() {
             size = (left?.size ?: 0) + (right?.size ?: 0) + 1
         }
 
-        internal fun minimal(): Entry<K, V> {
+        fun minimal(): Entry<K, V> {
             var cur = this
             while (cur.left != null) cur = cur.left!!
             return cur
         }
 
-        internal fun maximum(): Entry<K, V> {
+        fun maximum(): Entry<K, V> {
             var cur = this
             while (cur.right != null) cur = cur.right!!
             return cur
         }
 
-        internal fun predecessor(): Entry<K, V>? {
+        fun predecessor(): Entry<K, V>? {
             // 情况 1：如果 p 有左子树，前驱是左子树中的最右节点
             if (left != null) {
                 return left!!.maximum()
@@ -74,7 +100,7 @@ open class BinarySearchTree<K, V>(
             return cur.parent
         }
 
-        internal fun successor(): Entry<K, V>? {
+        fun successor(): Entry<K, V>? {
             // 情况 1：如果 p 有右子树，后继是右子树中的最左节点
             if (right != null) {
                 return right!!.minimal()
@@ -87,12 +113,33 @@ open class BinarySearchTree<K, V>(
             }
             return cur.parent
         }
+
+        fun toGraphviz(): String {
+            return buildString {
+                fun Entry<K, V>.dfs() {
+                    if (left != null) {
+                        appendLine("${key} -> ${left!!.key} [label = \"L\"];")
+                    }
+                    if (right != null) {
+                        appendLine("${key} -> ${right!!.key} [label = \"R\"];")
+                    }
+                    left?.dfs()
+                    right?.dfs()
+                }
+
+                appendLine("digraph g1 {")
+                appendLine("node [shape=circle];")
+                dfs()
+                appendLine("}")
+            }
+        }
     }
 
     private val Entry<*, *>?.size: Int
         get() = this?.size ?: 0
 
-    protected var root: Entry<K, V>? = null
+    var root: Entry<K, V>? = null
+        protected set
 
     protected fun searchNode(key: K): Entry<K, V>? {
         var cur: Entry<K, V>? = root
@@ -119,7 +166,7 @@ open class BinarySearchTree<K, V>(
      */
     protected fun insertNode(key: K, root: Entry<K, V>? = this.root): Pair<Entry<K, V>, Entry<K, V>?> {
         if (root == null) {
-            val newNode = Entry<K,V>(key)
+            val newNode = Entry<K, V>(key)
             return Pair(newNode, newNode)
         }
 
@@ -132,6 +179,7 @@ open class BinarySearchTree<K, V>(
                 root.updateSize()
                 return Pair(newNode, root)
             }
+
             cmp > 0 -> {
                 val (newNode, newRight) = insertNode(key, root.right)
                 root.right = newRight
@@ -139,6 +187,7 @@ open class BinarySearchTree<K, V>(
                 root.updateSize()
                 return Pair(newNode, root)
             }
+
             else -> {
                 return Pair(root, root)
             }
@@ -206,9 +255,9 @@ open class BinarySearchTree<K, V>(
         }
     }
 
-    protected inner class EntryIterator<out T>(val getValue: (Entry<K, V>) -> T) : MutableBidirectionIterator<T> {
+    private inner class EntryIterator<out T>(val getValue: (Entry<K, V>) -> T) : MutableBidirectionIterator<T> {
         private var next: Entry<K, V>? = root?.minimal()
-        private var prev:Entry<K,V>? = null
+        private var prev: Entry<K, V>? = null
 
         override fun hasNext(): Boolean {
             return next != null
@@ -304,11 +353,35 @@ open class BinarySearchTree<K, V>(
     }
 
     override fun floorEntry(key: K): Entry<K, V>? {
-        TODO("Not yet implemented")
+        var candidate: Entry<K, V>? = null
+
+        var cur: Entry<K, V>? = root
+        while (cur != null) {
+            val cmp = comparator.compare(key, cur.key)
+            if (cmp <= 0) {
+                candidate = cur
+                cur = cur.right
+            } else {
+                cur = cur.left
+            }
+        }
+        return candidate
     }
 
     override fun ceilingEntry(key: K): Entry<K, V>? {
-        TODO("Not yet implemented")
+        var candidate: Entry<K, V>? = null
+
+        var cur: Entry<K, V>? = root
+        while (cur != null) {
+            val cmp = comparator.compare(key, cur.key)
+            if (cmp >= 0) {
+                candidate = cur
+                cur = cur.left
+            } else {
+                cur = cur.right
+            }
+        }
+        return candidate
     }
 
     override fun higherEntry(key: K): Entry<K, V>? {
@@ -423,7 +496,7 @@ open class BinarySearchTree<K, V>(
     }
 
     override fun put(key: K, value: V): V? {
-        val (node,newRoot) = insertNode(key)
+        val (node, newRoot) = insertNode(key)
         root = newRoot
 
         val oldValue = node._value
@@ -437,26 +510,6 @@ open class BinarySearchTree<K, V>(
 
     override fun containsKey(key: K): Boolean {
         return searchNode(key) != null
-    }
-
-    fun toGraphviz(): String {
-        return buildString {
-            fun Entry<K, V>.dfs() {
-                if (left != null) {
-                    appendLine("${key} -> ${left!!.key} [label = \"L\"];")
-                }
-                if (right != null) {
-                    appendLine("${key} -> ${right!!.key} [label = \"R\"];")
-                }
-                left?.dfs()
-                right?.dfs()
-            }
-
-            appendLine("digraph g1 {")
-            appendLine("node [shape=circle];")
-            root?.dfs()
-            appendLine("}")
-        }
     }
 }
 

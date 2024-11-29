@@ -8,7 +8,7 @@ import kotlin.test.assertTrue
 
 class BinarySearchTreeTest {
     private fun randomMap(): MutableMap<Int, Int> {
-        val size = Random.nextInt(2, 4)
+        val size = Random.nextInt(2000, 4000)
         return HashMap<Int, Int>().apply {
             repeat(size) {
                 put(Random.nextInt(), Random.nextInt())
@@ -17,7 +17,7 @@ class BinarySearchTreeTest {
     }
 
     @Test
-    fun testBST() {
+    fun testAsNormalMap() {
         val map = randomMap()
         val bst = BinarySearchTree<Int, Int>()
 
@@ -43,5 +43,11 @@ class BinarySearchTreeTest {
 
         bst.clear()
         assertTrue(bst.isEmpty())
+    }
+
+    @Test
+    fun testAsSortedMap() {
+        val bst = BinarySearchTree<Int,Int>()
+
     }
 }
