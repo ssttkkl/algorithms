@@ -9,7 +9,7 @@ abstract class BinarySearchTree<K, out V, out N : BinarySearchTree<K, V, N>>(
 ) : BinaryTree<N> {
     protected abstract val thisNode: N
 
-    fun searchNode(key: K): N? {
+    open fun searchNode(key: K): N? {
         var cur: N? = thisNode
         while (cur != null) {
             val cmp = comparator.compare(key, cur.key)
@@ -35,7 +35,7 @@ abstract class BinarySearchTree<K, out V, out N : BinarySearchTree<K, V, N>>(
 abstract class MutableBinarySearchTree<K, V, out N : MutableBinarySearchTree<K, V, N>>(
     key: K, value: V,
     comparator: Comparator<K>
-) : BinaryTree<N>, BinarySearchTree<K, V, N>(key, value, comparator) {
+) : BinarySearchTree<K, V, N>(key, value, comparator) {
     protected abstract fun createNode(key: K, value: V): N
 
     override var left: @UnsafeVariance N? = null
@@ -90,11 +90,18 @@ abstract class MutableBinarySearchTree<K, V, out N : MutableBinarySearchTree<K, 
         size = left.size + right.size + 1
     }
 
+    interface InsertResult<out N : BinarySearchTree<*, *, N>> {
+        val success: Boolean
+        val insertedNode: N
+        val newRoot: N
+    }
+
     /**
-     * @return inserted node and new root after inserting node.
+     * @return is node not presented before insertion,
+     * inserted node and new root after inserting node.
      * if node already exists, returning the existing node as first
      */
-    fun insertNode(key: K, value: V): Pair<N, N?> {
+    fun insertNode(key: K, value: V): InsertResult<N> {
         return insertNode(key, value, thisNode)
     }
 
@@ -102,13 +109,19 @@ abstract class MutableBinarySearchTree<K, V, out N : MutableBinarySearchTree<K, 
      * @return inserted node and new root after inserting node.
      * if node already exists, returning the existing node as first
      */
-    protected abstract fun insertNode(key: K, value: V, root: @UnsafeVariance N?): Pair<N, N?>
+    protected abstract fun insertNode(key: K, value: V, root: @UnsafeVariance N?): InsertResult<N>
+
+    interface RemoveResult<out N : BinarySearchTree<*, *, N>> {
+        val success: Boolean
+        val removedNode: N?
+        val newRoot: N?
+    }
 
     /**
      * @return removed node and new root after removing node,
      * if node not existing, returning `null` value as first
      */
-    fun removeNode(key: K): Pair<N?, N?> {
+    fun removeNode(key: K): RemoveResult<N> {
         return removeNode(key, thisNode)
     }
 
@@ -116,7 +129,7 @@ abstract class MutableBinarySearchTree<K, V, out N : MutableBinarySearchTree<K, 
      * @return removed node and new root after removing node,
      * if node not existing, returning `null` value as first
      */
-    protected abstract fun removeNode(key: K, root: @UnsafeVariance N?): Pair<N?, N?>
+    protected abstract fun removeNode(key: K, root: @UnsafeVariance N?): RemoveResult<N>
 }
 
 fun <K, V, N : MutableBinarySearchTree<K, V, N>> N.asBinarySearchTree(): BinarySearchTree<K, V, N> {
@@ -135,7 +148,7 @@ fun <N : BinarySearchTree<*, *, N>> N.maximumNode(): N {
     return cur
 }
 
-fun <N : BinarySearchTree<*, *, N>> N.predecessor(): N? {
+fun <N : BinarySearchTree<*, *, N>> N.predecessor(ancestorBound: N? = null): N? {
     // 情况 1：如果 p 有左子树，前驱是左子树中的最右节点
     if (left != null) {
         return left!!.maximumNode()
@@ -143,13 +156,13 @@ fun <N : BinarySearchTree<*, *, N>> N.predecessor(): N? {
 
     // 情况 2：如果 p 没有左子树，前驱是向上查找直到找到一个是父节点右子树的节点
     var cur = this
-    while (cur.parent != null && cur != cur.parent!!.right) {
+    while (cur != ancestorBound && cur.parent != null && cur != cur.parent!!.right) {
         cur = cur.parent!!
     }
     return cur.parent
 }
 
-fun <N : BinarySearchTree<*, *, N>> N.successor(): N? {
+fun <N : BinarySearchTree<*, *, N>> N.successor(ancestorBound: N? = null): N? {
     // 情况 1：如果 p 有右子树，后继是右子树中的最左节点
     if (right != null) {
         return right!!.minimalNode()
@@ -157,22 +170,22 @@ fun <N : BinarySearchTree<*, *, N>> N.successor(): N? {
 
     // 情况 2：如果 p 没有右子树，后继是向上查找直到找到一个是父节点左子树的节点
     var cur = this
-    while (cur.parent != null && cur != cur.parent!!.left) {
+    while (cur != ancestorBound && cur.parent != null && cur != cur.parent!!.left) {
         cur = cur.parent!!
     }
     return cur.parent
 }
 
 
-fun <K, N : BinarySearchTree<K, *, N>> N.lowerEntry(key: K): N? {
-    val floor = floorEntry(key) ?: return null
+fun <K, N : BinarySearchTree<K, *, N>> N.lowerNode(key: K): N? {
+    val floor = floorNode(key) ?: return null
     if (floor.key == key) {
         return floor.predecessor()
     }
     return floor
 }
 
-fun <K, N : BinarySearchTree<K, *, N>> N.floorEntry(key: K): N? {
+fun <K, N : BinarySearchTree<K, *, N>> N.floorNode(key: K): N? {
     var candidate: N? = null
 
     var cur: N? = this
@@ -188,7 +201,7 @@ fun <K, N : BinarySearchTree<K, *, N>> N.floorEntry(key: K): N? {
     return candidate
 }
 
-fun <K, N : BinarySearchTree<K, *, N>> N.ceilingEntry(key: K): N? {
+fun <K, N : BinarySearchTree<K, *, N>> N.ceilingNode(key: K): N? {
     var candidate: N? = null
 
     var cur: N? = this
@@ -204,15 +217,15 @@ fun <K, N : BinarySearchTree<K, *, N>> N.ceilingEntry(key: K): N? {
     return candidate
 }
 
-fun <K, N : BinarySearchTree<K, *, N>> N.higherEntry(key: K): N? {
-    val ceiling = ceilingEntry(key) ?: return null
+fun <K, N : BinarySearchTree<K, *, N>> N.higherNode(key: K): N? {
+    val ceiling = ceilingNode(key) ?: return null
     if (ceiling.key == key) {
         return ceiling.successor()
     }
     return ceiling
 }
 
-fun <K, N : BinarySearchTree<K, *, N>> N.entryOfRank(rank: Int): N? {
+fun <K, N : BinarySearchTree<K, *, N>> N.nodeOfRank(rank: Int): N? {
     var cur: N? = this
     var r = rank + 1
     while (r in 1..cur.size && cur != null) {

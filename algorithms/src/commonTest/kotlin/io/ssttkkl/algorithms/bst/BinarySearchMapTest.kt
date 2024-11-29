@@ -8,10 +8,9 @@ import kotlin.test.assertTrue
 
 
 class BinarySearchMapTest {
-    private fun randomMap(): MutableMap<Int, Int> {
-        val size = Random.nextInt(2000, 4000)
+    private fun randomMap(size: Int = 2000): MutableMap<Int, Int> {
         return HashMap<Int, Int>().apply {
-            repeat(size) {
+            while(this.size < size) {
                 put(Random.nextInt(), Random.nextInt())
             }
         }
@@ -22,9 +21,7 @@ class BinarySearchMapTest {
         val map = randomMap()
         val bst = ClassicBinarySearchMap<Int, Int>()
 
-        map.forEach {
-            bst[it.key] = it.value
-        }
+        bst.putAll(map)
 
         assertEquals(map.size, bst.size)
         assertEquals(map, bst)
@@ -55,11 +52,5 @@ class BinarySearchMapTest {
             bst.keys.sorted(),
             bst.root!!.inorderTraversal().map { it.key }.toList()
         )
-    }
-
-    @Test
-    fun testAsSortedMap() {
-        val bst = ClassicBinarySearchMap<Int, Int>()
-
     }
 }

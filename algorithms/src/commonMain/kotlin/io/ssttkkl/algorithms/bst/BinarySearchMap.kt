@@ -63,47 +63,6 @@ abstract class BinarySearchMap<
         return Entry(key, keyComparator)
     }
 
-    private inner class EntryIterator<out T>(val getValue: (@UnsafeVariance N) -> T) : MutableBidirectionIterator<T> {
-        private var nextNode: N? = root?.minimalNode()
-        private var prevNode: N? = null
-
-        override fun hasNext(): Boolean {
-            return nextNode != null
-        }
-
-        private fun nextNode(): N {
-            val result = nextNode ?: throw NoSuchElementException()
-            nextNode = result.successor()
-            prevNode = result
-            return result
-        }
-
-        override fun next(): T {
-            return nextNode().let(getValue)
-        }
-
-        override fun remove() {
-            val result = prevNode ?: throw NoSuchElementException()
-            prevNode = null
-            this@BinarySearchMap.remove(result.key)
-        }
-
-        override fun hasPrevious(): Boolean {
-            return prevNode != null
-        }
-
-        private fun previousNode(): N {
-            val result = prevNode ?: throw NoSuchElementException()
-            prevNode = result.predecessor()
-            nextNode = result
-            return result
-        }
-
-        override fun previous(): T {
-            return previousNode().let(getValue)
-        }
-    }
-
     private inner class EntrySet : AbstractMutableSet<MutableMap.MutableEntry<K, V>>(),
         NavigableSet<MutableMap.MutableEntry<K, V>> {
 
@@ -119,7 +78,11 @@ abstract class BinarySearchMap<
         }
 
         override fun iterator(): MutableBidirectionIterator<MutableMap.MutableEntry<K, V>> {
-            return EntryIterator { it.value }
+            return MutableBinarySearchTreeIterator<N, MutableMap.MutableEntry<K, V>>(
+                ::root,
+                { this@BinarySearchMap.root = it },
+                { it.value }
+            )
         }
 
         override fun add(element: MutableMap.MutableEntry<K, V>): Boolean {
@@ -132,9 +95,9 @@ abstract class BinarySearchMap<
                 if (node == null || node !== element) {
                     return false
                 }
-                val (_, newRoot) = root.removeNode(element.key)
-                this@BinarySearchMap.root = newRoot
-                return true
+                val result = root.removeNode(element.key)
+                this@BinarySearchMap.root = result.newRoot
+                return result.success
             }
         }
 
@@ -189,7 +152,11 @@ abstract class BinarySearchMap<
         }
 
         override fun iterator(): MutableBidirectionIterator<K> {
-            return EntryIterator { it.key }
+            return MutableBinarySearchTreeIterator<N, K>(
+                ::root,
+                { this@BinarySearchMap.root = it },
+                { it.value.key }
+            )
         }
 
         override fun add(element: K): Boolean {
@@ -200,9 +167,9 @@ abstract class BinarySearchMap<
             root.let { root ->
                 if (root == null) return false
 
-                val (node, newRoot) = root.removeNode(element)
-                this@BinarySearchMap.root = newRoot
-                return node != null
+                val result = root.removeNode(element)
+                this@BinarySearchMap.root = result.newRoot
+                return result.success
             }
         }
 
@@ -244,28 +211,32 @@ abstract class BinarySearchMap<
         }
 
         override fun iterator(): MutableIterator<V> {
-            return EntryIterator { it.value.value }
+            return MutableBinarySearchTreeIterator<N, V>(
+                ::root,
+                { this@BinarySearchMap.root = it },
+                { it.value.value }
+            )
         }
     }
 
     override fun lowerEntry(key: K): MutableMap.MutableEntry<K, V>? {
-        return root?.lowerEntry(key)?.value
+        return root?.lowerNode(key)?.value
     }
 
     override fun floorEntry(key: K): MutableMap.MutableEntry<K, V>? {
-        return root?.floorEntry(key)?.value
+        return root?.floorNode(key)?.value
     }
 
     override fun ceilingEntry(key: K): MutableMap.MutableEntry<K, V>? {
-        return root?.ceilingEntry(key)?.value
+        return root?.ceilingNode(key)?.value
     }
 
     override fun higherEntry(key: K): MutableMap.MutableEntry<K, V>? {
-        return root?.higherEntry(key)?.value
+        return root?.higherNode(key)?.value
     }
 
     override fun entryOfRank(rank: Int): MutableMap.MutableEntry<K, V>? {
-        return root?.entryOfRank(rank)?.value
+        return root?.nodeOfRank(rank)?.value
     }
 
     override fun rankOfKey(key: K): Int {
@@ -288,9 +259,9 @@ abstract class BinarySearchMap<
         root.let { root ->
             if (root == null) return null
 
-            val (node, newRoot) = root.removeNode(key)
-            this@BinarySearchMap.root = newRoot
-            return node?.value?.value
+            val result = root.removeNode(key)
+            this@BinarySearchMap.root = result.newRoot
+            return result.removedNode?.value?.value
         }
     }
 
@@ -302,10 +273,10 @@ abstract class BinarySearchMap<
                 this@BinarySearchMap.root = createNode(entry)
                 return null
             }
-            val (node, newRoot) = root.insertNode(key, createEntry(key))
-            this@BinarySearchMap.root = newRoot
+            val result = root.insertNode(key, createEntry(key))
+            this@BinarySearchMap.root = result.newRoot
 
-            val entry = node.value
+            val entry = result.insertedNode.value
             if (entry.isSetValue) {
                 return entry.setValue(value)
             } else {
