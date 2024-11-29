@@ -18,6 +18,20 @@ open class BinarySearchTree<K, V>(
 
         internal var size: Int = 1
 
+        override fun toString(): String {
+            return "${key}=${value}"
+        }
+
+        override fun hashCode(): Int {
+            return key.hashCode() xor value.hashCode()
+        }
+
+        override fun equals(other: Any?): Boolean {
+            if (other === this) return true
+
+            return other is Map.Entry<*, *> && key == other.key && value == other.value
+        }
+
         override fun setValue(newValue: V): V {
             return value.also { _value = newValue }
         }
@@ -80,40 +94,61 @@ open class BinarySearchTree<K, V>(
 
     protected var root: Entry<K, V>? = null
 
-    protected fun searchNode(key: K, insert: Boolean = false): Entry<K, V>? {
+    protected fun searchNode(key: K): Entry<K, V>? {
         var cur: Entry<K, V>? = root
-        var parent: Entry<K, V>? = null
-        var cmp: Int = 0
         while (cur != null) {
-            cmp = comparator.compare(key, cur.key)
+            val cmp = comparator.compare(key, cur.key)
             when {
                 cmp < 0 -> {
-                    parent = cur
                     cur = cur.left
                 }
 
                 cmp > 0 -> {
-                    parent = cur
                     cur = cur.right
                 }
 
                 else -> return cur
             }
         }
-        if (insert) {
-            cur = Entry<K, V>(key).also { newNode ->
-                newNode.parent = parent
-                if (cmp < 0) {
-                    parent!!.left = newNode
-                } else {
-                    parent!!.right = newNode
-                }
-                newNode.forEachAncestor { it.size++ }
-            }
-        }
-        return cur
+        return null
     }
 
+    /**
+     * @return inserted node and new root after inserting node.
+     * if node already exists, returning the existing node as first
+     */
+    protected fun insertNode(key: K, root: Entry<K, V>? = this.root): Pair<Entry<K, V>, Entry<K, V>?> {
+        if (root == null) {
+            val newNode = Entry<K,V>(key)
+            return Pair(newNode, newNode)
+        }
+
+        val cmp = comparator.compare(key, root.key)
+        when {
+            cmp < 0 -> {
+                val (newNode, newLeft) = insertNode(key, root.left)
+                root.left = newLeft
+                newLeft?.parent = root
+                root.updateSize()
+                return Pair(newNode, root)
+            }
+            cmp > 0 -> {
+                val (newNode, newRight) = insertNode(key, root.right)
+                root.right = newRight
+                newRight?.parent = root
+                root.updateSize()
+                return Pair(newNode, root)
+            }
+            else -> {
+                return Pair(root, root)
+            }
+        }
+    }
+
+    /**
+     * @return removed node and new root after removing node,
+     * if node not existing, returning `null` value as first
+     */
     protected fun removeNode(key: K, root: Entry<K, V>? = this.root): Pair<Entry<K, V>?, Entry<K, V>?> {
         if (root == null) return Pair(null, null)
 
@@ -173,14 +208,16 @@ open class BinarySearchTree<K, V>(
 
     protected inner class EntryIterator<out T>(val getValue: (Entry<K, V>) -> T) : MutableBidirectionIterator<T> {
         private var next: Entry<K, V>? = root?.minimal()
+        private var prev:Entry<K,V>? = null
 
         override fun hasNext(): Boolean {
             return next != null
         }
 
-        fun nextEntry(): Entry<K, V> {
+        private fun nextEntry(): Entry<K, V> {
             val result = next ?: throw NoSuchElementException()
             next = result.successor()
+            prev = result
             return result
         }
 
@@ -189,20 +226,19 @@ open class BinarySearchTree<K, V>(
         }
 
         override fun remove() {
-            val result = next ?: throw NoSuchElementException()
-            next = result.successor()
-            val (node, newRoot) = removeNode(result.key)
-            check(node == result)
-            root = newRoot
+            val result = prev ?: throw NoSuchElementException()
+            prev = null
+            this@BinarySearchTree.remove(result.key)
         }
 
         override fun hasPrevious(): Boolean {
-            return next?.predecessor() != null
+            return prev != null
         }
 
         fun previousEntry(): Entry<K, V> {
-            val result = next ?: throw NoSuchElementException()
-            next = result.predecessor()
+            val result = prev ?: throw NoSuchElementException()
+            prev = result.predecessor()
+            next = result
             return result
         }
 
@@ -236,11 +272,26 @@ open class BinarySearchTree<K, V>(
             }
 
             override fun remove(element: MutableMap.MutableEntry<K, V>): Boolean {
-                val (node, newRoot) = removeNode(element.key)
-                if (node != null) {
-                    root = newRoot
+                val node = searchNode(element.key)
+                if (node == null || node !== element) {
+                    return false
                 }
-                return node != null
+                val (_, newRoot) = removeNode(element.key)
+                root = newRoot
+                return true
+            }
+
+            override fun removeAll(elements: Collection<MutableMap.MutableEntry<K, V>>): Boolean {
+                var anyRemoved = false
+                elements.forEach {
+                    anyRemoved = remove(it) || anyRemoved
+                }
+                return anyRemoved
+            }
+
+            override fun contains(element: MutableMap.MutableEntry<K, V>): Boolean {
+                val node = searchNode(element.key)
+                return node === element
             }
         }
 
@@ -344,10 +395,20 @@ open class BinarySearchTree<K, V>(
 
         override fun remove(element: K): Boolean {
             val (node, newRoot) = removeNode(element)
-            if (node != null) {
-                root = newRoot
-            }
+            root = newRoot
             return node != null
+        }
+
+        override fun removeAll(elements: Collection<K>): Boolean {
+            var anyRemoved = false
+            elements.forEach {
+                anyRemoved = remove(it) || anyRemoved
+            }
+            return anyRemoved
+        }
+
+        override fun contains(element: K): Boolean {
+            return this@BinarySearchTree.containsKey(element)
         }
     }
 
@@ -357,24 +418,16 @@ open class BinarySearchTree<K, V>(
 
     override fun remove(key: K): V? {
         val (node, newRoot) = removeNode(key)
-        if (node != null) {
-            root = newRoot
-        }
+        root = newRoot
         return node?.value
     }
 
     override fun put(key: K, value: V): V? {
-        var oldValue: V? = null
-        if (root == null) {
-            root = Entry<K, V>(key).apply {
-                _value = value
-            }
-        } else {
-            searchNode(key, true)!!.apply {
-                oldValue = _value
-                _value = value
-            }
-        }
+        val (node,newRoot) = insertNode(key)
+        root = newRoot
+
+        val oldValue = node._value
+        node._value = value
         return oldValue
     }
 
