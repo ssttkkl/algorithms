@@ -9,10 +9,6 @@ class ClassicBinarySearchTree<K, V>(
     override val thisNode: ClassicBinarySearchTree<K, V>
         get() = this
 
-    override fun createNode(key: K, value: V): ClassicBinarySearchTree<K, V> {
-        return ClassicBinarySearchTree(key, value, comparator)
-    }
-
     private inner class InsertResultImpl(
         override var success: Boolean,
         override var insertedNode: ClassicBinarySearchTree<K, V>,
@@ -28,7 +24,7 @@ class ClassicBinarySearchTree<K, V>(
         root: @UnsafeVariance ClassicBinarySearchTree<K, V>?
     ): InsertResult<ClassicBinarySearchTree<K, V>> {
         if (root == null) {
-            val newNode = createNode(key, value)
+            val newNode = ClassicBinarySearchTree(key, value, comparator)
             return InsertResultImpl(true, newNode, newNode)
         }
 

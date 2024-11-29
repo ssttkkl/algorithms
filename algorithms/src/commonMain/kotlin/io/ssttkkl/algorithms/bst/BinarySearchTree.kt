@@ -36,8 +36,6 @@ abstract class MutableBinarySearchTree<K, V, out N : MutableBinarySearchTree<K, 
     key: K, value: V,
     comparator: Comparator<K>
 ) : BinarySearchTree<K, V, N>(key, value, comparator) {
-    protected abstract fun createNode(key: K, value: V): N
-
     override var left: @UnsafeVariance N? = null
         protected set
 
@@ -53,17 +51,15 @@ abstract class MutableBinarySearchTree<K, V, out N : MutableBinarySearchTree<K, 
     /**
      * @return new root after rotation
      */
-    internal fun rotateLeft(): N {
-        val newRoot = right
+    protected open fun rotateLeft(): N {
+        val newRoot = thisNode.right
         checkNotNull(newRoot)
-
-        val p = newRoot.left
+        thisNode.right = newRoot.left
+        newRoot.left?.parent = thisNode
         newRoot.left = thisNode
-        this.parent = newRoot
-        this.right = p
-        p?.parent = thisNode
+        thisNode.parent = newRoot
 
-        this.updateSize()
+        thisNode.updateSize()
         newRoot.updateSize()
         return newRoot
     }
@@ -71,22 +67,20 @@ abstract class MutableBinarySearchTree<K, V, out N : MutableBinarySearchTree<K, 
     /**
      * @return new root after rotation
      */
-    internal fun rotateRight(): N {
-        val newRoot = left
+    protected open fun rotateRight(): N {
+        val newRoot = thisNode.left
         checkNotNull(newRoot)
-
-        val p = newRoot.right
+        thisNode.left = newRoot.right
+        newRoot.right?.parent = thisNode
         newRoot.right = thisNode
-        this.parent = newRoot
-        this.left = p
-        p?.parent = thisNode
+        thisNode.parent = newRoot
 
-        this.updateSize()
+        thisNode.updateSize()
         newRoot.updateSize()
         return newRoot
     }
 
-    internal fun updateSize() {
+    protected fun updateSize() {
         size = left.size + right.size + 1
     }
 
