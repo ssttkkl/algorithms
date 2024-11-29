@@ -1,5 +1,8 @@
 package io.ssttkkl.algorithms.bst
 
+import io.ssttkkl.algorithms.utils.BidirectionIterator
+import io.ssttkkl.algorithms.utils.MutableBidirectionIterator
+
 
 sealed class AbsBinarySearchTreeIterator<N : BinarySearchTree<*, *, N>, V>(
     protected val root: () -> N?,
@@ -59,5 +62,6 @@ class MutableBinarySearchTreeIterator<N : MutableBinarySearchTree<*, *, N>, V>(
         if (result.newRoot != curRoot) {
             onRootChange(result.newRoot)
         }
+        clearPrev()
     }
 }

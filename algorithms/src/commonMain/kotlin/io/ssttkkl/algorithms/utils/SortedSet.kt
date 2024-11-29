@@ -22,7 +22,7 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package io.ssttkkl.algorithms.bst
+package io.ssttkkl.algorithms.utils
 
 /**
  * A [Set] that further provides a *total ordering* on its elements.

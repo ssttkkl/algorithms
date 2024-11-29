@@ -1,7 +1,8 @@
 package io.ssttkkl.algorithms.bst
 
-import io.ssttkkl.algorithms.bst.BinarySearchMap
 import io.ssttkkl.algorithms.tree.size
+import io.ssttkkl.algorithms.utils.MutableBidirectionIterator
+import io.ssttkkl.algorithms.utils.NavigableSet
 
 abstract class BinarySearchSet<
         E,

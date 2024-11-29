@@ -1,4 +1,4 @@
-package io.ssttkkl.algorithms.bst
+package io.ssttkkl.algorithms.utils
 
 interface BidirectionIterator<out T> : Iterator<T> {
     /**

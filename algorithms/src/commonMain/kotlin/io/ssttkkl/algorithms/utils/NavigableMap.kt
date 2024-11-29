@@ -31,7 +31,7 @@
  * JSR-166 Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
-package io.ssttkkl.algorithms.bst
+package io.ssttkkl.algorithms.utils
 
 /**
  * A [SortedMap] extended with navigation methods returning the
