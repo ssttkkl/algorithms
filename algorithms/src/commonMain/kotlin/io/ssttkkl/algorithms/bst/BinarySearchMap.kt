@@ -152,7 +152,13 @@ abstract class BinarySearchMap<
         }
     }
 
-    override val entries: MutableSortedSet<MutableMap.MutableEntry<K, V>> by lazy { EntrySet() }
+    private val _entries by lazy { EntrySet() }
+
+    override val entries: MutableSortedSet<MutableMap.MutableEntry<K, V>> = _entries
+
+    // Workaround of KT-20070, KT-33203
+    @PublishedApi
+    internal fun getEntries(): MutableSet<MutableMap.MutableEntry<K, V>> = _entries
 
     override fun lowerEntry(key: K): MutableMap.MutableEntry<K, V>? {
         return root?.lowerEntry(key)?.value
