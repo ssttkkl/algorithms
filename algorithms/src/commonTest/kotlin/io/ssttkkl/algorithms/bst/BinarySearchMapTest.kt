@@ -36,9 +36,6 @@ class BinarySearchMapTest {
         map -= keysToRemove
         bst -= keysToRemove
 
-        println("map: ${map}")
-        println("bst: ${bst}")
-
         assertEquals(map.size, bst.size)
         assertEquals(map, bst)
         assertEquals(map.keys, bst.keys)

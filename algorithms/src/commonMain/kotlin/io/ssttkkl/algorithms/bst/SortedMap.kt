@@ -160,138 +160,6 @@ interface SortedMap<K, out V> : Map<K, V> {
     }
 
     /**
-     * Returns a key-value mapping associated with the greatest key
-     * strictly less than the given key, or `null` if there is
-     * no such key.
-     *
-     * @param key the key
-     * @return an entry with the greatest key less than `key`,
-     * or `null` if there is no such key
-     * @throws ClassCastException if the specified key cannot be compared
-     * with the keys currently in the map
-     * @throws NullPointerException if the specified key is null
-     * and this map does not permit null keys
-     */
-    fun lowerEntry(key: K): Map.Entry<K, V>?
-
-    /**
-     * Returns the greatest key strictly less than the given key, or
-     * `null` if there is no such key.
-     *
-     * @param key the key
-     * @return the greatest key less than `key`,
-     * or `null` if there is no such key
-     * @throws ClassCastException if the specified key cannot be compared
-     * with the keys currently in the map
-     * @throws NullPointerException if the specified key is null
-     * and this map does not permit null keys
-     */
-    fun lowerKey(key: K): K? {
-        return lowerEntry(key)?.key
-    }
-
-    /**
-     * Returns a key-value mapping associated with the greatest key
-     * less than or equal to the given key, or `null` if there
-     * is no such key.
-     *
-     * @param key the key
-     * @return an entry with the greatest key less than or equal to
-     * `key`, or `null` if there is no such key
-     * @throws ClassCastException if the specified key cannot be compared
-     * with the keys currently in the map
-     * @throws NullPointerException if the specified key is null
-     * and this map does not permit null keys
-     */
-    fun floorEntry(key: K): Map.Entry<K, V>?
-
-    /**
-     * Returns the greatest key less than or equal to the given key,
-     * or `null` if there is no such key.
-     *
-     * @param key the key
-     * @return the greatest key less than or equal to `key`,
-     * or `null` if there is no such key
-     * @throws ClassCastException if the specified key cannot be compared
-     * with the keys currently in the map
-     * @throws NullPointerException if the specified key is null
-     * and this map does not permit null keys
-     */
-    fun floorKey(key: K): K? {
-        return floorEntry(key)?.key
-    }
-
-    /**
-     * Returns a key-value mapping associated with the least key
-     * greater than or equal to the given key, or `null` if
-     * there is no such key.
-     *
-     * @param key the key
-     * @return an entry with the least key greater than or equal to
-     * `key`, or `null` if there is no such key
-     * @throws ClassCastException if the specified key cannot be compared
-     * with the keys currently in the map
-     * @throws NullPointerException if the specified key is null
-     * and this map does not permit null keys
-     */
-    fun ceilingEntry(key: K): Map.Entry<K, V>?
-
-    /**
-     * Returns the least key greater than or equal to the given key,
-     * or `null` if there is no such key.
-     *
-     * @param key the key
-     * @return the least key greater than or equal to `key`,
-     * or `null` if there is no such key
-     * @throws ClassCastException if the specified key cannot be compared
-     * with the keys currently in the map
-     * @throws NullPointerException if the specified key is null
-     * and this map does not permit null keys
-     */
-    fun ceilingKey(key: K): K? {
-        return ceilingEntry(key)?.key
-    }
-
-    /**
-     * Returns a key-value mapping associated with the least key
-     * strictly greater than the given key, or `null` if there
-     * is no such key.
-     *
-     * @param key the key
-     * @return an entry with the least key greater than `key`,
-     * or `null` if there is no such key
-     * @throws ClassCastException if the specified key cannot be compared
-     * with the keys currently in the map
-     * @throws NullPointerException if the specified key is null
-     * and this map does not permit null keys
-     */
-    fun higherEntry(key: K): Map.Entry<K, V>?
-
-    /**
-     * Returns the least key strictly greater than the given key, or
-     * `null` if there is no such key.
-     *
-     * @param key the key
-     * @return the least key greater than `key`,
-     * or `null` if there is no such key
-     * @throws ClassCastException if the specified key cannot be compared
-     * with the keys currently in the map
-     * @throws NullPointerException if the specified key is null
-     * and this map does not permit null keys
-     */
-    fun higherKey(key: K): K? {
-        return higherEntry(key)?.key
-    }
-
-    fun entryOfRank(rank: Int): Map.Entry<K, V>?
-
-    fun keyOfRank(rank: Int): K? {
-        return entryOfRank(rank)?.key
-    }
-
-    fun rankOfKey(key: K): Int
-
-    /**
      * Returns a [Set] view of the keys contained in this map.
      * The set's iterator returns the keys in ascending order.
      * The set is backed by the map, so changes to the map are
@@ -352,14 +220,8 @@ interface SortedMap<K, out V> : Map<K, V> {
 }
 
 interface MutableSortedMap<K, V> : MutableMap<K, V>, SortedMap<K, V> {
-
-    override fun lowerEntry(key: K): MutableMap.MutableEntry<K, V>?
-    override fun floorEntry(key: K): MutableMap.MutableEntry<K, V>?
-    override fun ceilingEntry(key: K): MutableMap.MutableEntry<K, V>?
-    override fun higherEntry(key: K): MutableMap.MutableEntry<K, V>?
     override fun firstEntry(): MutableMap.MutableEntry<K, V>
     override fun lastEntry(): MutableMap.MutableEntry<K, V>
-    override fun entryOfRank(rank: Int): MutableMap.MutableEntry<K, V>?
 
     /**
      * Returns a [Set] view of the keys contained in this map.

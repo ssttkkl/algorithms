@@ -11,7 +11,7 @@ abstract class BinarySearchMap<
                 N>
         > internal constructor(
     protected val keyComparator: Comparator<K>
-) : AbstractMutableMap<K, V>(), MutableSortedMap<K, V> {
+) : AbstractMutableMap<K, V>(), NavigableMap<K, V> {
     protected abstract fun createNode(entry: Entry<K, V>): N
 
     var root: @UnsafeVariance N? = null
@@ -105,7 +105,7 @@ abstract class BinarySearchMap<
     }
 
     private inner class EntrySet : AbstractMutableSet<MutableMap.MutableEntry<K, V>>(),
-        MutableSortedSet<MutableMap.MutableEntry<K, V>> {
+        NavigableSet<MutableMap.MutableEntry<K, V>> {
 
         override val size: Int
             get() = this@BinarySearchMap.size
@@ -150,17 +150,33 @@ abstract class BinarySearchMap<
             val node = root?.searchNode(element.key)
             return node == element
         }
+
+        override fun lower(e: MutableMap.MutableEntry<K, V>): MutableMap.MutableEntry<K, V>? {
+            return this@BinarySearchMap.lowerEntry(e.key)
+        }
+
+        override fun floor(e: MutableMap.MutableEntry<K, V>): MutableMap.MutableEntry<K, V>? {
+            return this@BinarySearchMap.floorEntry(e.key)
+        }
+
+        override fun ceiling(e: MutableMap.MutableEntry<K, V>): MutableMap.MutableEntry<K, V>? {
+            return this@BinarySearchMap.ceilingEntry(e.key)
+        }
+
+        override fun higher(e: MutableMap.MutableEntry<K, V>): MutableMap.MutableEntry<K, V>? {
+            return this@BinarySearchMap.higherEntry(e.key)
+        }
     }
 
     private val _entries by lazy { EntrySet() }
 
-    override val entries: MutableSortedSet<MutableMap.MutableEntry<K, V>> = _entries
+    override val entries: NavigableSet<MutableMap.MutableEntry<K, V>> = _entries
 
     // Workaround of KT-20070, KT-33203
     @PublishedApi
     internal fun getEntries(): MutableSet<MutableMap.MutableEntry<K, V>> = _entries
 
-    override val keys: MutableSortedSet<K> = object : AbstractMutableSet<K>(), MutableSortedSet<K> {
+    override val keys: NavigableSet<K> = object : AbstractMutableSet<K>(), NavigableSet<K> {
         override val size: Int
             get() = this@BinarySearchMap.size
 
@@ -200,6 +216,22 @@ abstract class BinarySearchMap<
 
         override fun contains(element: K): Boolean {
             return this@BinarySearchMap.containsKey(element)
+        }
+
+        override fun lower(e: K): K? {
+            return this@BinarySearchMap.lowerKey(e)
+        }
+
+        override fun floor(e: K): K? {
+            return this@BinarySearchMap.floorKey(e)
+        }
+
+        override fun ceiling(e: K): K? {
+            return this@BinarySearchMap.ceilingKey(e)
+        }
+
+        override fun higher(e: K): K? {
+            return this@BinarySearchMap.higherKey(e)
         }
     }
 

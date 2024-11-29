@@ -133,6 +133,7 @@ interface SortedSet<out E> : Set<E> {
     fun last(): E
 
     override fun iterator(): BidirectionIterator<E>
+
 }
 
 interface MutableSortedSet<E> : MutableSet<E>, SortedSet<E> {
