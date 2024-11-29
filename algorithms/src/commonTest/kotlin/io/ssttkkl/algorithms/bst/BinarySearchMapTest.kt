@@ -7,7 +7,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 
-class BinarySearchMapTest {
+abstract class BinarySearchMapTest<M: BinarySearchMap<Int,Int,*>> {
     private fun randomMap(size: Int = 2000): MutableMap<Int, Int> {
         return HashMap<Int, Int>().apply {
             while(this.size < size) {
@@ -16,10 +16,12 @@ class BinarySearchMapTest {
         }
     }
 
+    abstract fun createBst(): M
+
     @Test
     fun testAsNormalMap() {
         val map = randomMap()
-        val bst = ClassicBinarySearchMap<Int, Int>()
+        val bst = createBst()
 
         bst.putAll(map)
 
@@ -45,12 +47,24 @@ class BinarySearchMapTest {
 
     @Test
     fun testAsBinaryTree() {
-        val bst = ClassicBinarySearchMap<Int, Int>()
+        val bst = createBst()
         bst.putAll(randomMap())
 
         assertEquals(
             bst.keys.sorted(),
             bst.root!!.inorderTraversal().map { it.key }.toList()
         )
+    }
+}
+
+class ClassicBinarySearchMapTest: BinarySearchMapTest<ClassicBinarySearchMap<Int,Int>>() {
+    override fun createBst(): ClassicBinarySearchMap<Int, Int> {
+        return ClassicBinarySearchMap()
+    }
+}
+
+class TreapMapTest: BinarySearchMapTest<TreapMap<Int,Int>>() {
+    override fun createBst(): TreapMap<Int, Int> {
+        return TreapMap()
     }
 }

@@ -54,8 +54,11 @@ abstract class MutableBinarySearchTree<K, V, out N : MutableBinarySearchTree<K, 
     protected open fun rotateLeft(): N {
         val newRoot = thisNode.right
         checkNotNull(newRoot)
-        thisNode.right = newRoot.left
-        newRoot.left?.parent = thisNode
+
+        val newRootLeft = newRoot.left
+        thisNode.right = newRootLeft
+        newRootLeft?.parent = thisNode
+
         newRoot.left = thisNode
         thisNode.parent = newRoot
 
@@ -70,8 +73,11 @@ abstract class MutableBinarySearchTree<K, V, out N : MutableBinarySearchTree<K, 
     protected open fun rotateRight(): N {
         val newRoot = thisNode.left
         checkNotNull(newRoot)
-        thisNode.left = newRoot.right
-        newRoot.right?.parent = thisNode
+
+        val newRootRight = newRoot.right
+        thisNode.left = newRootRight
+        newRootRight?.parent = thisNode
+
         newRoot.right = thisNode
         thisNode.parent = newRoot
 
