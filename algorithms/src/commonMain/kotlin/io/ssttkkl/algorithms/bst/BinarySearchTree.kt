@@ -4,13 +4,10 @@ import io.ssttkkl.algorithms.tree.BinaryTree
 import io.ssttkkl.algorithms.tree.size
 
 abstract class BinarySearchTree<K, out V, out N : BinarySearchTree<K, V, N>>(
+    val key: K, val value: V,
     val comparator: Comparator<K>
 ) : BinaryTree<N> {
     protected abstract val thisNode: N
-
-    abstract val key: K
-
-    abstract val value: V
 
     fun searchNode(key: K): N? {
         var cur: N? = thisNode
@@ -30,11 +27,15 @@ abstract class BinarySearchTree<K, out V, out N : BinarySearchTree<K, V, N>>(
         }
         return null
     }
+
+    override val repr: String
+        get() = key.toString()
 }
 
 abstract class MutableBinarySearchTree<K, V, out N : MutableBinarySearchTree<K, V, N>>(
+    key: K, value: V,
     comparator: Comparator<K>
-) : BinaryTree<N>, BinarySearchTree<K, V, N>(comparator) {
+) : BinaryTree<N>, BinarySearchTree<K, V, N>(key, value, comparator) {
     protected abstract fun createNode(key: K, value: V): N
 
     override var left: @UnsafeVariance N? = null
@@ -49,6 +50,9 @@ abstract class MutableBinarySearchTree<K, V, out N : MutableBinarySearchTree<K, 
     override var size: Int = 1
         protected set
 
+    /**
+     * @return new root after rotation
+     */
     internal fun rotateLeft(): N {
         val newRoot = right
         checkNotNull(newRoot)
@@ -64,6 +68,9 @@ abstract class MutableBinarySearchTree<K, V, out N : MutableBinarySearchTree<K, 
         return newRoot
     }
 
+    /**
+     * @return new root after rotation
+     */
     internal fun rotateRight(): N {
         val newRoot = left
         checkNotNull(newRoot)
@@ -95,35 +102,7 @@ abstract class MutableBinarySearchTree<K, V, out N : MutableBinarySearchTree<K, 
      * @return inserted node and new root after inserting node.
      * if node already exists, returning the existing node as first
      */
-    protected fun insertNode(key: K, value: V, root: @UnsafeVariance N?): Pair<N, N?> {
-        if (root == null) {
-            val newNode = createNode(key, value)
-            return Pair(newNode, newNode)
-        }
-
-        val cmp = comparator.compare(key, root.key)
-        when {
-            cmp < 0 -> {
-                val (newNode, newLeft) = insertNode(key, value, root.left)
-                root.left = newLeft
-                newLeft?.parent = root
-                root.updateSize()
-                return Pair(newNode, root)
-            }
-
-            cmp > 0 -> {
-                val (newNode, newRight) = insertNode(key, value, root.right)
-                root.right = newRight
-                newRight?.parent = root
-                root.updateSize()
-                return Pair(newNode, root)
-            }
-
-            else -> {
-                return Pair(root, root)
-            }
-        }
-    }
+    protected abstract fun insertNode(key: K, value: V, root: @UnsafeVariance N?): Pair<N, N?>
 
     /**
      * @return removed node and new root after removing node,
@@ -137,62 +116,11 @@ abstract class MutableBinarySearchTree<K, V, out N : MutableBinarySearchTree<K, 
      * @return removed node and new root after removing node,
      * if node not existing, returning `null` value as first
      */
-    protected fun removeNode(key: K, root: @UnsafeVariance N?): Pair<N?, N?> {
-        if (root == null) return Pair(null, null)
+    protected abstract fun removeNode(key: K, root: @UnsafeVariance N?): Pair<N?, N?>
+}
 
-        val cmp: Int = comparator.compare(key, root.key)
-        when {
-            cmp < 0 -> {
-                val (node, newLeft) = removeNode(key, root.left)
-                root.left = newLeft
-                newLeft?.parent = root
-                root.updateSize()
-                return Pair(node, root)
-            }
-
-            cmp > 0 -> {
-                val (node, newRight) = removeNode(key, root.right)
-                root.right = newRight
-                newRight?.parent = root
-                root.updateSize()
-                return Pair(node, root)
-            }
-
-            root.left == null -> {
-                root.right?.parent = null
-                return Pair(root, root.right)
-            }
-
-            root.right == null -> {
-                root.left?.parent = null
-                return Pair(root, root.left)
-            }
-
-            root.left.size > root.right.size -> {
-                val replacement = root.left!!.maximumNode()
-                val (_, newLeft) = removeNode(replacement.key, root.left)
-                replacement.left = newLeft
-                newLeft?.parent = replacement
-                replacement.right = root.right
-                root.right?.parent = replacement
-                replacement.updateSize()
-                replacement.parent = null
-                return Pair(root, replacement)
-            }
-
-            else -> {
-                val replacement = root.right!!.maximumNode()
-                val (_, newRight) = removeNode(replacement.key, root.right)
-                replacement.left = root.left
-                root.left?.parent = replacement
-                replacement.right = newRight
-                newRight?.parent = replacement
-                replacement.updateSize()
-                replacement.parent = null
-                return Pair(root, replacement)
-            }
-        }
-    }
+fun <K, V, N : MutableBinarySearchTree<K, V, N>> N.asBinarySearchTree(): BinarySearchTree<K, V, N> {
+    return this
 }
 
 fun <N : BinarySearchTree<*, *, N>> N.minimalNode(): N {

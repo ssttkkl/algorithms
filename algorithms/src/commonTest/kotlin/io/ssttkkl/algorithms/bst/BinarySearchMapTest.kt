@@ -7,9 +7,9 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 
-class BinarySearchTreeTest {
+class BinarySearchMapTest {
     private fun randomMap(): MutableMap<Int, Int> {
-        val size = Random.nextInt(20, 40)
+        val size = Random.nextInt(2000, 4000)
         return HashMap<Int, Int>().apply {
             repeat(size) {
                 put(Random.nextInt(), Random.nextInt())

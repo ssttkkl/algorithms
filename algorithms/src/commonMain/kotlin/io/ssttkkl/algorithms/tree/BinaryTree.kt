@@ -10,6 +10,9 @@ interface BinaryTree<out N : BinaryTree<N>> {
 
     val size: Int
         get() = throw UnsupportedOperationException("not size-aware")
+
+    val repr: String
+        get() = toString()
 }
 
 val BinaryTree<*>?.size: Int
@@ -41,11 +44,12 @@ fun <N : BinaryTree<N>> N.toGraphviz(): String {
         appendLine("digraph g1 {")
         appendLine("node [shape=circle];")
         inorderTraversal().forEach {
-            left?.let { left ->
-                appendLine("${it} -> ${left} [label = \"L\"];")
+            appendLine("${it.repr};")
+            it.left?.let { left ->
+                appendLine("${it.repr} -> ${left.repr} [label = \"L\"];")
             }
-            right?.let { right ->
-                appendLine("${it} -> ${right} [label = \"R\"];")
+            it.right?.let { right ->
+                appendLine("${it.repr} -> ${right.repr} [label = \"R\"];")
             }
         }
         appendLine("}")

@@ -17,6 +17,9 @@ abstract class BinarySearchMap<
     var root: @UnsafeVariance N? = null
         private set
 
+    override val size: Int
+        get() = root.size
+
     class Entry<K, V> internal constructor(override val key: K, private val keyComparator: Comparator<K>) :
         MutableMap.MutableEntry<K, V>, Comparable<Map.Entry<K, V>> {
         private var _value: V? = null
@@ -101,9 +104,6 @@ abstract class BinarySearchMap<
         }
     }
 
-    override val size: Int
-        get() = root.size
-
     private inner class EntrySet : AbstractMutableSet<MutableMap.MutableEntry<K, V>>(),
         MutableSortedSet<MutableMap.MutableEntry<K, V>> {
 
@@ -160,38 +160,6 @@ abstract class BinarySearchMap<
     @PublishedApi
     internal fun getEntries(): MutableSet<MutableMap.MutableEntry<K, V>> = _entries
 
-    override fun lowerEntry(key: K): MutableMap.MutableEntry<K, V>? {
-        return root?.lowerEntry(key)?.value
-    }
-
-    override fun floorEntry(key: K): MutableMap.MutableEntry<K, V>? {
-        return root?.floorEntry(key)?.value
-    }
-
-    override fun ceilingEntry(key: K): MutableMap.MutableEntry<K, V>? {
-        return root?.ceilingEntry(key)?.value
-    }
-
-    override fun higherEntry(key: K): MutableMap.MutableEntry<K, V>? {
-        return root?.higherEntry(key)?.value
-    }
-
-    override fun entryOfRank(rank: Int): MutableMap.MutableEntry<K, V>? {
-        return root?.entryOfRank(rank)?.value
-    }
-
-    override fun rankOfKey(key: K): Int {
-        return root?.rankOfKey(key) ?: 0
-    }
-
-    override fun firstEntry(): MutableMap.MutableEntry<K, V> {
-        return root?.minimalNode()?.value ?: throw NoSuchElementException()
-    }
-
-    override fun lastEntry(): MutableMap.MutableEntry<K, V> {
-        return root?.maximumNode()?.value ?: throw NoSuchElementException()
-    }
-
     override val keys: MutableSortedSet<K> = object : AbstractMutableSet<K>(), MutableSortedSet<K> {
         override val size: Int
             get() = this@BinarySearchMap.size
@@ -233,6 +201,51 @@ abstract class BinarySearchMap<
         override fun contains(element: K): Boolean {
             return this@BinarySearchMap.containsKey(element)
         }
+    }
+
+    override val values: MutableCollection<V> = object : AbstractMutableCollection<V>() {
+        override val size: Int
+            get() = this@BinarySearchMap.size
+
+        override fun add(element: V): Boolean {
+            throw UnsupportedOperationException()
+        }
+
+        override fun iterator(): MutableIterator<V> {
+            return EntryIterator { it.value.value }
+        }
+    }
+
+    override fun lowerEntry(key: K): MutableMap.MutableEntry<K, V>? {
+        return root?.lowerEntry(key)?.value
+    }
+
+    override fun floorEntry(key: K): MutableMap.MutableEntry<K, V>? {
+        return root?.floorEntry(key)?.value
+    }
+
+    override fun ceilingEntry(key: K): MutableMap.MutableEntry<K, V>? {
+        return root?.ceilingEntry(key)?.value
+    }
+
+    override fun higherEntry(key: K): MutableMap.MutableEntry<K, V>? {
+        return root?.higherEntry(key)?.value
+    }
+
+    override fun entryOfRank(rank: Int): MutableMap.MutableEntry<K, V>? {
+        return root?.entryOfRank(rank)?.value
+    }
+
+    override fun rankOfKey(key: K): Int {
+        return root?.rankOfKey(key) ?: 0
+    }
+
+    override fun firstEntry(): MutableMap.MutableEntry<K, V> {
+        return root?.minimalNode()?.value ?: throw NoSuchElementException()
+    }
+
+    override fun lastEntry(): MutableMap.MutableEntry<K, V> {
+        return root?.maximumNode()?.value ?: throw NoSuchElementException()
     }
 
     override fun clear() {
