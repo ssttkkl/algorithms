@@ -1,5 +1,6 @@
 package io.ssttkkl.algorithms.bst
 
+import io.ssttkkl.algorithms.tree.inorderTraversal
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -43,6 +44,17 @@ class BinarySearchTreeTest {
 
         bst.clear()
         assertTrue(bst.isEmpty())
+    }
+
+    @Test
+    fun testAsBinaryTree() {
+        val bst = BinarySearchTree<Int, Int>()
+        bst.putAll(randomMap())
+
+        assertEquals(
+            bst.keys.sorted(),
+            bst.root!!.inorderTraversal().map { it.key }.toList()
+        )
     }
 
     @Test

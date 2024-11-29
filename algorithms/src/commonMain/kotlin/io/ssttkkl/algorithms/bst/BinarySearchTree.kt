@@ -1,25 +1,27 @@
 package io.ssttkkl.algorithms.bst
 
+import io.ssttkkl.algorithms.tree.BinaryTreeNode
+
 open class BinarySearchTree<K, V>(
     private val comparator: Comparator<K>
 ) : AbstractMutableMap<K, V>(), MutableSortedMap<K, V> {
     open class Entry<K, V>(
         override var key: K,
-    ) : MutableMap.MutableEntry<K, V> {
+    ) : BinaryTreeNode<Entry<K, V>>, MutableMap.MutableEntry<K, V> {
         internal var _value: V? = null
         override val value: V
             get() = _value!!
 
-        var left: Entry<K, V>? = null
+        override var left: Entry<K, V>? = null
             internal set
 
-         var right: Entry<K, V>? = null
+        override var right: Entry<K, V>? = null
             internal set
 
-         var parent: Entry<K, V>? = null
+        override var parent: Entry<K, V>? = null
             internal set
 
-        var size: Int = 1
+        override var size: Int = 1
             internal set
 
         override fun toString(): String {
@@ -112,26 +114,6 @@ open class BinarySearchTree<K, V>(
                 cur = cur.parent!!
             }
             return cur.parent
-        }
-
-        fun toGraphviz(): String {
-            return buildString {
-                fun Entry<K, V>.dfs() {
-                    if (left != null) {
-                        appendLine("${key} -> ${left!!.key} [label = \"L\"];")
-                    }
-                    if (right != null) {
-                        appendLine("${key} -> ${right!!.key} [label = \"R\"];")
-                    }
-                    left?.dfs()
-                    right?.dfs()
-                }
-
-                appendLine("digraph g1 {")
-                appendLine("node [shape=circle];")
-                dfs()
-                appendLine("}")
-            }
         }
     }
 
