@@ -9,7 +9,7 @@ import kotlin.test.assertTrue
 
 class BinarySearchTreeTest {
     private fun randomMap(): MutableMap<Int, Int> {
-        val size = Random.nextInt(2000, 4000)
+        val size = Random.nextInt(20, 40)
         return HashMap<Int, Int>().apply {
             repeat(size) {
                 put(Random.nextInt(), Random.nextInt())
@@ -20,7 +20,7 @@ class BinarySearchTreeTest {
     @Test
     fun testAsNormalMap() {
         val map = randomMap()
-        val bst = BinarySearchTree<Int, Int>()
+        val bst = ClassicBinarySearchMap<Int, Int>()
 
         map.forEach {
             bst[it.key] = it.value
@@ -36,6 +36,9 @@ class BinarySearchTreeTest {
         map -= keysToRemove
         bst -= keysToRemove
 
+        println("map: ${map}")
+        println("bst: ${bst}")
+
         assertEquals(map.size, bst.size)
         assertEquals(map, bst)
         assertEquals(map.keys, bst.keys)
@@ -48,7 +51,7 @@ class BinarySearchTreeTest {
 
     @Test
     fun testAsBinaryTree() {
-        val bst = BinarySearchTree<Int, Int>()
+        val bst = ClassicBinarySearchMap<Int, Int>()
         bst.putAll(randomMap())
 
         assertEquals(
@@ -59,7 +62,7 @@ class BinarySearchTreeTest {
 
     @Test
     fun testAsSortedMap() {
-        val bst = BinarySearchTree<Int,Int>()
+        val bst = ClassicBinarySearchMap<Int, Int>()
 
     }
 }

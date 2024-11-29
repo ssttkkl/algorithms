@@ -1,6 +1,6 @@
 package io.ssttkkl.algorithms.tree
 
-interface BinaryTreeNode<N : BinaryTreeNode<N>> {
+interface BinaryTree<out N : BinaryTree<N>> {
     val left: N?
 
     val right: N?
@@ -12,7 +12,10 @@ interface BinaryTreeNode<N : BinaryTreeNode<N>> {
         get() = throw UnsupportedOperationException("not size-aware")
 }
 
-fun <N : BinaryTreeNode<N>> N.inorderTraversal(): Sequence<N> = sequence {
+val BinaryTree<*>?.size: Int
+    get() = this?.size ?: 0
+
+fun <N : BinaryTree<N>> N.inorderTraversal(): Sequence<N> = sequence {
     val stack = ArrayList<N>()
 
     var cur: N? = this@inorderTraversal
@@ -33,7 +36,7 @@ fun <N : BinaryTreeNode<N>> N.inorderTraversal(): Sequence<N> = sequence {
     }
 }
 
-fun <N : BinaryTreeNode<N>> N.toGraphviz(): String {
+fun <N : BinaryTree<N>> N.toGraphviz(): String {
     return buildString {
         appendLine("digraph g1 {")
         appendLine("node [shape=circle];")
