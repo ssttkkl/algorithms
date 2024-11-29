@@ -1,11 +1,10 @@
 package io.ssttkkl.algorithms.bst
 
-import io.ssttkkl.algorithms.tree.size
-
 class RedBlackTree<K, V>(
-    key: K, value: V,
+    override val key: K,
+    override var value: V,
     comparator: Comparator<K>
-) : MutableBinarySearchTree<K, V, RedBlackTree<K, V>>(key, value, comparator) {
+) : MutableBinarySearchTree<K, V, RedBlackTree<K, V>>(comparator) {
     var red: Boolean = false
         private set
 

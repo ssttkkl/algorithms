@@ -4,9 +4,10 @@ import io.ssttkkl.algorithms.tree.size
 import kotlin.random.Random
 
 class Treap<K, V>(
-    key: K, value: V,
+    override val key: K,
+    override var value: V,
     comparator: Comparator<K>
-) : MutableBinarySearchTree<K, V, Treap<K, V>>(key, value, comparator) {
+) : MutableBinarySearchTree<K, V, Treap<K, V>>(comparator) {
     companion object {
         val random: Random = Random
     }
@@ -142,6 +143,7 @@ class Treap<K, V>(
             else -> {
                 val replacement = root.right!!.minimalNode()
                 val replacementResult = removeNode(replacement.key, root.right) as RemoveResultImpl
+                replacement.priority = root.priority
                 replacement.left = root.left
                 root.left?.parent = replacement
                 replacement.right = replacementResult.newRoot

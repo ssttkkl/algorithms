@@ -4,9 +4,10 @@ import io.ssttkkl.algorithms.tree.BinaryTree
 import io.ssttkkl.algorithms.tree.size
 
 abstract class BinarySearchTree<K, out V, out N : BinarySearchTree<K, V, N>>(
-    val key: K, val value: V,
     val comparator: Comparator<K>
 ) : BinaryTree<N> {
+    abstract val key: K
+    abstract val value: V
     protected abstract val thisNode: N
 
     open fun searchNode(key: K): N? {
@@ -33,9 +34,10 @@ abstract class BinarySearchTree<K, out V, out N : BinarySearchTree<K, V, N>>(
 }
 
 abstract class MutableBinarySearchTree<K, V, out N : MutableBinarySearchTree<K, V, N>>(
-    key: K, value: V,
     comparator: Comparator<K>
-) : BinarySearchTree<K, V, N>(key, value, comparator) {
+) : BinarySearchTree<K, V, N>(comparator) {
+    abstract override var value: V
+
     override var left: @UnsafeVariance N? = null
         protected set
 
@@ -102,7 +104,9 @@ abstract class MutableBinarySearchTree<K, V, out N : MutableBinarySearchTree<K, 
      * if node already exists, returning the existing node as first
      */
     fun insertNode(key: K, value: V): InsertResult<N> {
-        return insertNode(key, value, thisNode)
+        return insertNode(key, value, thisNode).also {
+            it.newRoot.parent = null
+        }
     }
 
     /**
@@ -122,7 +126,9 @@ abstract class MutableBinarySearchTree<K, V, out N : MutableBinarySearchTree<K, 
      * if node not existing, returning `null` value as first
      */
     fun removeNode(key: K): RemoveResult<N> {
-        return removeNode(key, thisNode)
+        return removeNode(key, thisNode).also{
+            it.newRoot?.parent = null
+        }
     }
 
     /**
