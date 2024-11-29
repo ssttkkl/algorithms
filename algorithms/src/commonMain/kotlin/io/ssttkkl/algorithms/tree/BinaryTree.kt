@@ -18,6 +18,18 @@ interface BinaryTree<out N : BinaryTree<N>> {
 val BinaryTree<*>?.size: Int
     get() = this?.size ?: 0
 
+fun <N : BinaryTree<N>> N.preorderTraversal(): Sequence<N> = sequence {
+    val stack = ArrayList<N>()
+    stack.add(this@preorderTraversal)
+
+    while (stack.isNotEmpty()) {
+        val top = stack.removeLast()
+        yield(top)
+        top.left?.let { stack.add(it) }
+        top.right?.let { stack.add(it) }
+    }
+}
+
 fun <N : BinaryTree<N>> N.inorderTraversal(): Sequence<N> = sequence {
     val stack = ArrayList<N>()
 
@@ -37,6 +49,23 @@ fun <N : BinaryTree<N>> N.inorderTraversal(): Sequence<N> = sequence {
             cur = cur.left
         }
     }
+}
+
+fun <N: BinaryTree<N>> N.calcHeight(): Int {
+    val stack = ArrayList<Pair<N, Int>>()
+    stack.add(Pair(this, 0))
+
+    var ans = 0
+    while (stack.isNotEmpty()) {
+        val (top, topHeight) = stack.removeLast()
+        if (topHeight > ans) {
+            ans = topHeight
+        }
+        top.left?.let { stack.add(Pair(it, topHeight + 1)) }
+        top.right?.let { stack.add(Pair(it, topHeight + 1)) }
+    }
+
+    return ans
 }
 
 fun <N : BinaryTree<N>> N.toGraphviz(): String {

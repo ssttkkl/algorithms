@@ -1,5 +1,6 @@
 package io.ssttkkl.algorithms.bst
 
+import io.ssttkkl.algorithms.tree.calcHeight
 import io.ssttkkl.algorithms.tree.inorderTraversal
 import kotlin.random.Random
 import kotlin.test.Test
@@ -7,7 +8,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class BinarySearchTreeTest {
-    private fun randomMap(size: Int = 2000): MutableMap<Int, Int> {
+    private fun randomMap(size: Int = 100000): MutableMap<Int, Int> {
         return HashMap<Int, Int>().apply {
             while (this.size < size) {
                 put(Random.nextInt(), Random.nextInt())
@@ -17,7 +18,7 @@ class BinarySearchTreeTest {
 
     @Test
     fun testRedBlackTree() {
-        val map = randomMap(1000)
+        val map = randomMap(100000)
         val first = map.entries.first()
         map -= first.key
 
@@ -35,5 +36,7 @@ class BinarySearchTreeTest {
             rbt.inorderTraversal().map { it.key }.toList()
         )
 
+        println("size: ${rbt.size}")
+        println("height: ${rbt.calcHeight()}")
     }
 }
