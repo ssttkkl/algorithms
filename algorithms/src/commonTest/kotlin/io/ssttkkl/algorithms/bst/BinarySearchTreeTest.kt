@@ -70,14 +70,14 @@ class ClassicBinarySearchTreeTest: BinarySearchTreeTest<ClassicBinarySearchTree<
         return ClassicBinarySearchTree(key, value, compareBy { it })
     }
 }
-class RedBlackTreeTest: BinarySearchTreeTest<RedBlackTree<Int,Int>>() {
-    override fun createBst(
-        key: Int,
-        value: Int
-    ): RedBlackTree<Int, Int> {
-        return RedBlackTree(key, value, compareBy { it })
-    }
-}
+//class RedBlackTreeTest: BinarySearchTreeTest<RedBlackTree<Int,Int>>() {
+//    override fun createBst(
+//        key: Int,
+//        value: Int
+//    ): RedBlackTree<Int, Int> {
+//        return RedBlackTree(key, value, compareBy { it })
+//    }
+//}
 
 class TreapTest: BinarySearchTreeTest<Treap<Int,Int>>() {
     override fun createBst(

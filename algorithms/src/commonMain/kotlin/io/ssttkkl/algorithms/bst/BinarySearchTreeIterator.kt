@@ -4,23 +4,12 @@ import io.ssttkkl.algorithms.utils.BidirectionIterator
 import io.ssttkkl.algorithms.utils.MutableBidirectionIterator
 
 
-sealed class AbsBinarySearchTreeIterator<N : BinarySearchTree<*, *, N>, V>(
-    protected val root: () -> N?,
-    protected val mapper: (N) -> V
+class BinarySearchTreeIterator<N : BinarySearchTree<*, *, N>, V>(
+    private val root: () -> N?,
+    private val mapper: (N) -> V
 ) : BidirectionIterator<V> {
-    protected var nextNode: N? = root()?.minimalNode()
-        private set
-
-    protected var prevNode: N? = null
-        private set
-
-    protected fun clearNext() {
-        nextNode = null
-    }
-
-    protected fun clearPrev() {
-        prevNode = null
-    }
+    private var nextNode: N? = root()?.minimalNode()
+    private var prevNode: N? = null
 
     override fun hasNext(): Boolean {
         return nextNode != null
@@ -45,23 +34,70 @@ sealed class AbsBinarySearchTreeIterator<N : BinarySearchTree<*, *, N>, V>(
     }
 }
 
-class BinarySearchTreeIterator<N : BinarySearchTree<*, *, N>, V>(
-    root: N?,
-    mapper: (N) -> V
-) : AbsBinarySearchTreeIterator<N, V>({ root }, mapper)
-
 class MutableBinarySearchTreeIterator<N : MutableBinarySearchTree<*, *, N>, V>(
-    root: () -> N?,
+    private val root: () -> N?,
     private val onRootChange: (N?) -> Unit,
-    mapper: (N) -> V
-) : AbsBinarySearchTreeIterator<N, V>(root, mapper), MutableBidirectionIterator<V> {
+    private val mapper: (N) -> V
+) : MutableBidirectionIterator<V> {
+
+    private var nextNode: N? = root()?.minimalNode()
+    private var prevNode: N? = null
+
+    private var lastNextRetNode: N? = null
+    private var lastPrevRetNode: N? = null
+
+    override fun hasNext(): Boolean {
+        return nextNode != null
+    }
+
+    override fun next(): V {
+        val result = nextNode ?: throw NoSuchElementException()
+        nextNode = result.successor(ancestorBound = root())
+        prevNode = result
+
+        lastNextRetNode = result
+        lastPrevRetNode = null
+
+        return mapper(result)
+    }
+
+    override fun hasPrevious(): Boolean {
+        return prevNode != null
+    }
+
+    override fun previous(): V {
+        val result = prevNode ?: throw NoSuchElementException()
+        prevNode = result.predecessor(ancestorBound = root())
+        nextNode = result
+
+        lastNextRetNode = null
+        lastPrevRetNode = result
+
+        return mapper(result)
+    }
+
     override fun remove() {
-        val prev = prevNode ?: throw NoSuchElementException()
-        val curRoot = root() ?: error("root is null")
-        val result = curRoot.removeNode(prev.key)
-        if (result.newRoot != curRoot) {
-            onRootChange(result.newRoot)
+        if (lastPrevRetNode != null) {
+            nextNode = nextNode?.successor(ancestorBound = root())
+
+            val curRoot = root() ?: error("root is null")
+            val result = curRoot.removeNode(lastPrevRetNode!!.key)
+            if (result.newRoot != curRoot) {
+                onRootChange(result.newRoot)
+            }
+        } else if (lastNextRetNode != null) {
+            prevNode = prevNode?.predecessor(ancestorBound = root())
+
+            val curRoot = root() ?: error("root is null")
+            val result = curRoot.removeNode(lastNextRetNode!!.key)
+            if (result.newRoot != curRoot) {
+                onRootChange(result.newRoot)
+            }
+        } else {
+            throw IllegalStateException()
         }
-        clearPrev()
+
+        lastNextRetNode = null
+        lastPrevRetNode = null
     }
 }

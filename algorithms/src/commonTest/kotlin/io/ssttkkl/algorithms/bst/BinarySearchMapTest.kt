@@ -1,5 +1,6 @@
 package io.ssttkkl.algorithms.bst
 
+import io.ssttkkl.algorithms.testutil.randomMap
 import io.ssttkkl.algorithms.tree.inorderTraversal
 import kotlin.random.Random
 import kotlin.test.Test
@@ -8,13 +9,6 @@ import kotlin.test.assertTrue
 
 
 abstract class BinarySearchMapTest<M: BinarySearchMap<Int,Int,*>> {
-    private fun randomMap(size: Int = 2000): MutableMap<Int, Int> {
-        return HashMap<Int, Int>().apply {
-            while(this.size < size) {
-                put(Random.nextInt(), Random.nextInt())
-            }
-        }
-    }
 
     abstract fun createBst(): M
 
