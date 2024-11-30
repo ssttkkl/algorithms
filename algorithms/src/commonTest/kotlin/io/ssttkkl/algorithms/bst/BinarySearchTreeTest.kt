@@ -5,6 +5,7 @@ import io.ssttkkl.algorithms.tree.inorderTraversal
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 abstract class BinarySearchTreeTest<T: MutableBinarySearchTree<Int,Int,T>> {
@@ -19,22 +20,33 @@ abstract class BinarySearchTreeTest<T: MutableBinarySearchTree<Int,Int,T>> {
     }
 
     @Test
-    fun testRedBlackTree() {
+    fun testTree() {
         val map = randomMap(100000)
         val first = map.entries.first()
-        map -= first.key
+        val mapWithoutFirst = map - first.key
 
         var rbt = createBst(first.key, first.value)
-        map.forEach { entry ->
+        mapWithoutFirst.forEach { entry ->
             val result = rbt.insertNode(entry.key, entry.value)
             assertTrue(result.success)
             assertTrue(result.insertedNode.key == entry.key)
             assertTrue(result.insertedNode.value == entry.value)
             rbt = result.newRoot
         }
+        assertTrue(rbt.size == map.size)
+
+        // 重复插入
+        map.forEach { entry ->
+            val node = rbt.searchNode(entry.key)
+            val result = rbt.insertNode(entry.key, entry.value)
+            assertFalse(result.success)
+            assertTrue(result.insertedNode == node)
+            assertTrue(result.newRoot == rbt)
+            assertTrue(rbt.size == map.size)
+        }
 
         assertEquals(
-            (map.keys + first.key).sorted(),
+            map.keys.sorted(),
             rbt.inorderTraversal().map { it.key }.toList()
         )
 
@@ -49,11 +61,13 @@ abstract class BinarySearchTreeTest<T: MutableBinarySearchTree<Int,Int,T>> {
             assertTrue(result.removedNode?.value == map[key])
             rbt = result.newRoot!!
 
+            assertTrue(rbt.searchNode(key) == null)
+
             map.remove(key)
         }
 
         assertEquals(
-            (map.keys + first.key).sorted(),
+            map.keys.sorted(),
             rbt.inorderTraversal().map { it.key }.toList()
         )
 
