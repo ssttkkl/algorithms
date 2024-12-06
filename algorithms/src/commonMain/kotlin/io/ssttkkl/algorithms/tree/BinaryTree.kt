@@ -15,6 +15,11 @@ interface BinaryTree<out N : BinaryTree<N>> {
         get() = toString()
 }
 
+data class SimpleBinaryTree<V>(
+    var value: V,
+    override var left: SimpleBinaryTree<V>? = null,
+    override var right: SimpleBinaryTree<V>? = null):BinaryTree<SimpleBinaryTree<V>>
+
 val BinaryTree<*>?.size: Int
     get() = this?.size ?: 0
 
@@ -25,8 +30,8 @@ fun <N : BinaryTree<N>> N.preorderTraversal(): Sequence<N> = sequence {
     while (stack.isNotEmpty()) {
         val top = stack.removeLast()
         yield(top)
-        top.left?.let { stack.add(it) }
         top.right?.let { stack.add(it) }
+        top.left?.let { stack.add(it) }
     }
 }
 
@@ -51,7 +56,24 @@ fun <N : BinaryTree<N>> N.inorderTraversal(): Sequence<N> = sequence {
     }
 }
 
-fun <N: BinaryTree<N>> N.calcHeight(): Int {
+fun <N : BinaryTree<N>> N.postorderTraversal(): Sequence<N> = sequence {
+    val stack1 = ArrayList<N>()
+    val stack2 = ArrayList<N>()
+    stack1.add(this@postorderTraversal)
+
+    while (stack1.isNotEmpty()) {
+        val node = stack1.removeLast()
+        stack2.add(node)
+        node.left?.let { stack1.add(it) }
+        node.right?.let { stack1.add(it) }
+    }
+
+    while (stack2.isNotEmpty()) {
+        yield(stack2.removeLast())
+    }
+}
+
+fun <N : BinaryTree<N>> N.calcHeight(): Int {
     val stack = ArrayList<Pair<N, Int>>()
     stack.add(Pair(this, 0))
 
